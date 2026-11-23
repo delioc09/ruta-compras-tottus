@@ -1,0 +1,753 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruta de Compras | Tottus</title>
+  <style>
+    :root {
+      --azul: #0F2D4A;
+      --medio: #2E75B6;
+      --fondo: #F8F9FA;
+      --borde: #DFE5EC;
+      --verde: #16845B;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--azul);
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    header {
+      background: var(--azul);
+      color: white;
+      padding: 24px 6%;
+    }
+
+    header h1 { margin: 0 0 8px; }
+    header p { margin: 0; opacity: .85; }
+
+    main {
+      max-width: 1400px;
+      margin: auto;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 15px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px #0F2D4A0A;
+    }
+
+    h2 { margin: 0 0 16px; font-size: 20px; }
+
+    .buscador { position: relative; }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      font-size: 16px;
+      outline-color: var(--medio);
+    }
+
+    .resultados {
+      margin-top: 7px;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+    }
+
+    .resultado {
+      padding: 12px;
+      border-bottom: 1px solid var(--borde);
+      cursor: pointer;
+    }
+
+    .resultado:hover { background: #EAF3FC; }
+    .resultado:last-child { border-bottom: 0; }
+
+    .resultado small {
+      display: block;
+      color: #65758A;
+      margin-top: 4px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .principal {
+      width: 100%;
+      background: var(--medio);
+      color: white;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .principal:hover { background: #205D94; }
+    .principal:disabled { opacity: .5; cursor: not-allowed; }
+
+    .lista {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .producto {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    .producto small {
+      display: block;
+      color: #65758A;
+      margin-top: 4px;
+    }
+
+    .quitar {
+      background: #FCE9E9;
+      color: #B42323;
+      border-radius: 8px;
+      padding: 7px 11px;
+    }
+
+    .vacio { color: #718096; font-size: 14px; }
+
+    .pasos {
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    .pasos li {
+      padding: 12px 5px;
+      border-bottom: 1px solid var(--borde);
+      line-height: 1.6;
+    }
+
+    .pasos li:last-child { border-bottom: none; }
+
+    .mapa {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+    }
+
+    .pasillo {
+      position: relative;
+      min-height: 100px;
+      border: 2px solid var(--borde);
+      background: #F0F3F7;
+      border-radius: 12px;
+      padding: 13px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .pasillo strong { font-size: 18px; }
+
+    .pasillo span {
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .pasillo.activo {
+      background: #DDEDFC;
+      border-color: var(--medio);
+    }
+
+    .pasillo .numero {
+      position: absolute;
+      top: -9px;
+      right: -8px;
+      background: var(--medio);
+      color: white;
+      border-radius: 50%;
+      width: 27px;
+      height: 27px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .leyenda {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #526579;
+    }
+
+    .punto {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 5px;
+      background: #DDEDFC;
+      border: 1px solid var(--medio);
+    }
+
+    .punto.normal {
+      background: #F0F3F7;
+      border-color: var(--borde);
+    }
+
+    .contador {
+      background: #EAF3FC;
+      color: var(--medio);
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .titulo-lista {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .error {
+      padding: 14px;
+      background: #FFF0F0;
+      color: #A52222;
+      border-radius: 9px;
+    }
+
+    @media (max-width: 850px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+
+      .panel { padding: 17px; }
+
+      header { padding: 22px 18px; }
+
+      .mapa {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .pasillo { min-height: 90px; padding: 10px 4px; }
+    }
+
+    @media (max-width: 380px) {
+      .mapa { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Ruta de Compras</h1>
+    <p>Encuentra tus productos y organiza tu recorrido por el supermercado.</p>
+  </header>
+
+  <main>
+    <section>
+      <div class="panel">
+        <h2>Buscar productos</h2>
+        <div class="buscador">
+          <input
+            id="busqueda"
+            type="search"
+            placeholder="Ej: arroz, hervidor, shampoo..."
+            autocomplete="off"
+            aria-label="Buscar productos"
+          >
+          <div id="resultados" class="resultados" hidden></div>
+        </div>
+        <p id="estado" class="vacio">
+          Escribe el nombre de un producto para comenzar.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>Mapa del supermercado</h2>
+        <div id="mapa" class="mapa"></div>
+        <div class="leyenda">
+          <span><i class="punto normal"></i>Pasillo normal</span>
+          <span><i class="punto"></i>Pasillo seleccionado</span>
+        </div>
+        <p class="vacio">
+          Mapa esquemático generado a partir de los productos.
+        </p>
+      </div>
+
+      <div class="panel" id="panelRuta">
+        <h2>Tu ruta optimizada</h2>
+        <div id="ruta">
+          <p class="vacio">
+            Agrega productos y presiona "Optimizar ruta".
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="titulo-lista">
+        <h2>Mi lista de compras</h2>
+        <span id="contador" class="contador">0</span>
+      </div>
+
+      <div id="lista">
+        <p class="vacio">Todavía no agregas productos.</p>
+      </div>
+
+      <button id="optimizar" class="principal" disabled>
+        Optimizar ruta
+      </button>
+    </aside>
+  </main>
+
+  <!-- Cargar primero el archivo de productos -->
+  <script src="productos.js"></script>
+
+  <script>
+    "use strict";
+
+    const $ = id => document.getElementById(id);
+
+    const busqueda = $("busqueda");
+    const resultados = $("resultados");
+    const estado = $("estado");
+    const mapa = $("mapa");
+    const lista = $("lista");
+    const ruta = $("ruta");
+    const contador = $("contador");
+    const optimizar = $("optimizar");
+
+    const seleccionados = new Map();
+    let rutaActual = [];
+
+    function normalizar(texto) {
+      return String(texto ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function ordenNumerico(valor) {
+      const numero = Number(valor);
+      return Number.isFinite(numero)
+        ? numero
+        : Number.MAX_SAFE_INTEGER;
+    }
+
+    function compararProductos(a, b) {
+      return ordenNumerico(a.orden) - ordenNumerico(b.orden)
+        || String(a.pasillo).localeCompare(
+          String(b.pasillo), "es", { numeric: true }
+        )
+        || a.nombre.localeCompare(b.nombre, "es");
+    }
+
+    function texto(elemento, contenido) {
+      elemento.textContent = contenido;
+      return elemento;
+    }
+
+    function crearElemento(etiqueta, clase, contenido) {
+      const elemento = document.createElement(etiqueta);
+      if (clase) elemento.className = clase;
+      if (contenido !== undefined) {
+        elemento.textContent = contenido;
+      }
+      return elemento;
+    }
+
+    function claveProducto(producto) {
+      return [
+        normalizar(producto.nombre),
+        normalizar(producto.pasillo)
+      ].join("|");
+    }
+
+    function pasilloId(producto) {
+      return String(producto.pasillo).trim();
+    }
+
+    // Verificar que productos.js esté disponible.
+    const datosValidos =
+      typeof PRODUCTOS !== "undefined" &&
+      Array.isArray(PRODUCTOS);
+
+    const productos = datosValidos
+      ? PRODUCTOS.filter(p =>
+          p &&
+          typeof p.nombre === "string" &&
+          p.nombre.trim() &&
+          p.pasillo !== undefined &&
+          p.pasillo !== null &&
+          String(p.pasillo).trim() &&
+          p.orden !== undefined &&
+          p.orden !== null &&
+          Number.isFinite(Number(p.orden))
+        ).map(p => ({
+          nombre: p.nombre.trim(),
+          categoria: String(p.categoria ?? "General").trim(),
+          pasillo: String(p.pasillo).trim(),
+          orden: Number(p.orden)
+        }))
+      : [];
+
+    function mostrarResultados() {
+      resultados.replaceChildren();
+
+      const consulta = normalizar(busqueda.value);
+
+      if (!consulta) {
+        resultados.hidden = true;
+        return;
+      }
+
+      const coincidencias = productos
+        .filter(p => normalizar(p.nombre).includes(consulta))
+        .sort(compararProductos)
+        .slice(0, 30);
+
+      resultados.hidden = false;
+
+      if (!coincidencias.length) {
+        resultados.appendChild(
+          crearElemento(
+            "div",
+            "resultado",
+            "No se encontraron productos."
+          )
+        );
+        return;
+      }
+
+      coincidencias.forEach(producto => {
+        const item = crearElemento(
+          "div", "resultado", producto.nombre
+        );
+
+        const detalle = crearElemento(
+          "small",
+          "",
+          `${producto.categoria} · Pasillo ${producto.pasillo}`
+        );
+
+        item.appendChild(detalle);
+        item.setAttribute("role", "button");
+        item.tabIndex = 0;
+
+        const agregar = () => agregarProducto(producto);
+
+        item.addEventListener("click", agregar);
+        item.addEventListener("keydown", evento => {
+          if (evento.key === "Enter" || evento.key === " ") {
+            evento.preventDefault();
+            agregar();
+          }
+        });
+
+        resultados.appendChild(item);
+      });
+    }
+
+    function agregarProducto(producto) {
+      const clave = claveProducto(producto);
+
+      if (seleccionados.has(clave)) {
+        estado.textContent = "Este producto ya está en tu lista.";
+        return;
+      }
+
+      seleccionados.set(clave, producto);
+      busqueda.value = "";
+      resultados.hidden = true;
+      estado.textContent = `${producto.nombre} agregado a la lista.`;
+
+      actualizarLista();
+    }
+
+    function quitarProducto(clave) {
+      seleccionados.delete(clave);
+      actualizarLista();
+    }
+
+    function actualizarLista() {
+      lista.replaceChildren();
+
+      const items = [...seleccionados.entries()];
+
+      contador.textContent = String(items.length);
+      optimizar.disabled = items.length === 0;
+
+      if (!items.length) {
+        lista.appendChild(
+          crearElemento(
+            "p", "vacio", "Todavía no agregas productos."
+          )
+        );
+      }
+
+      const ul = crearElemento("ul", "lista");
+
+      items.forEach(([clave, producto]) => {
+        const li = crearElemento("li", "producto");
+        const info = crearElemento("div");
+
+        info.appendChild(
+          crearElemento("strong", "", producto.nombre)
+        );
+
+        info.appendChild(
+          crearElemento(
+            "small",
+            "",
+            `Pasillo ${producto.pasillo}`
+          )
+        );
+
+        const boton = crearElemento("button", "quitar", "×");
+        boton.type = "button";
+        boton.setAttribute(
+          "aria-label", `Quitar ${producto.nombre}`
+        );
+        boton.addEventListener("click", () => {
+          quitarProducto(clave);
+        });
+
+        li.append(info, boton);
+        ul.appendChild(li);
+      });
+
+      lista.appendChild(ul);
+
+      // Mantener la ruta sincronizada con la lista.
+      if (rutaActual.length) {
+        generarRuta();
+      } else {
+        dibujarMapa();
+      }
+
+      if (!items.length) {
+        rutaActual = [];
+        ruta.replaceChildren(
+          crearElemento(
+            "p",
+            "vacio",
+            'Agrega productos y presiona "Optimizar ruta".'
+          )
+        );
+        dibujarMapa();
+      }
+    }
+
+    function obtenerGrupos() {
+      const ordenados = [...seleccionados.values()]
+        .sort(compararProductos);
+
+      const grupos = new Map();
+
+      ordenados.forEach(producto => {
+        const id = pasilloId(producto);
+
+        if (!grupos.has(id)) {
+          grupos.set(id, {
+            pasillo: id,
+            categoria: producto.categoria,
+            orden: producto.orden,
+            productos: []
+          });
+        }
+
+        const grupo = grupos.get(id);
+        grupo.productos.push(producto);
+
+        if (producto.orden < grupo.orden) {
+          grupo.orden = producto.orden;
+        }
+      });
+
+      return [...grupos.values()].sort((a, b) =>
+        a.orden - b.orden ||
+        a.pasillo.localeCompare(
+          b.pasillo, "es", { numeric: true }
+        )
+      );
+    }
+
+    function generarRuta() {
+      rutaActual = obtenerGrupos();
+      ruta.replaceChildren();
+
+      if (!rutaActual.length) {
+        ruta.appendChild(
+          crearElemento("p", "vacio", "Tu lista está vacía.")
+        );
+        dibujarMapa();
+        return;
+      }
+
+      const ol = crearElemento("ol", "pasos");
+
+      rutaActual.forEach(grupo => {
+        const li = crearElemento("li");
+        const encabezado = crearElemento(
+          "strong",
+          "",
+          `Pasillo ${grupo.pasillo} (${grupo.categoria}): `
+        );
+
+        li.appendChild(encabezado);
+        li.appendChild(
+          document.createTextNode(
+            grupo.productos.map(p => p.nombre).join(", ")
+          )
+        );
+
+        ol.appendChild(li);
+      });
+
+      ruta.appendChild(ol);
+      dibujarMapa();
+    }
+
+    function dibujarMapa() {
+      mapa.replaceChildren();
+
+      const pasillos = new Map();
+
+      productos.forEach(producto => {
+        const id = pasilloId(producto);
+
+        if (!pasillos.has(id)) {
+          pasillos.set(id, {
+            pasillo: id,
+            categoria: producto.categoria,
+            orden: producto.orden
+          });
+        } else {
+          const existente = pasillos.get(id);
+          existente.orden = Math.min(
+            existente.orden, producto.orden
+          );
+        }
+      });
+
+      const ordenados = [...pasillos.values()]
+        .sort((a, b) =>
+          a.orden - b.orden ||
+          a.pasillo.localeCompare(
+            b.pasillo, "es", { numeric: true }
+          )
+        );
+
+      const activos = new Set(
+        [...seleccionados.values()].map(pasilloId)
+      );
+
+      const visitas = new Map(
+        rutaActual.map((grupo, indice) => [
+          grupo.pasillo, indice + 1
+        ])
+      );
+
+      if (!ordenados.length) {
+        mapa.appendChild(
+          crearElemento(
+            "p",
+            "vacio",
+            "No hay pasillos disponibles para mostrar."
+          )
+        );
+        return;
+      }
+
+      ordenados.forEach(pasillo => {
+        const activo = activos.has(pasillo.pasillo);
+
+        const bloque = crearElemento(
+          "div",
+          activo ? "pasillo activo" : "pasillo"
+        );
+
+        bloque.appendChild(
+          crearElemento("strong", "", pasillo.pasillo)
+        );
+
+        bloque.appendChild(
+          crearElemento("span", "", pasillo.categoria)
+        );
+
+        if (visitas.has(pasillo.pasillo)) {
+          bloque.appendChild(
+            crearElemento(
+              "div",
+              "numero",
+              String(visitas.get(pasillo.pasillo))
+            )
+          );
+        }
+
+        mapa.appendChild(bloque);
+      });
+    }
+
+    busqueda.addEventListener("input", mostrarResultados);
+
+    optimizar.addEventListener("click", () => {
+      generarRuta();
+      $("panelRuta").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+
+    if (!datosValidos) {
+      estado.className = "error";
+      estado.textContent =
+        "No se pudo cargar productos.js. Comprueba que " +
+        "esté en la misma carpeta que index.html y que " +
+        "defina la variable PRODUCTOS.";
+      busqueda.disabled = true;
+    } else if (!productos.length) {
+      estado.className = "error";
+      estado.textContent =
+        "El archivo productos.js no contiene productos válidos.";
+    } else {
+      estado.textContent =
+        `${productos.length} productos disponibles. ` +
+        "Escribe para comenzar.";
+    }
+
+    dibujarMapa();
+  </script>
+</body>
+</html>
